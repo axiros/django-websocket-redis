@@ -28,7 +28,7 @@ class uWSGIWebsocket(object):
             return uwsgi.websocket_recv_nb()
         except IOError as e:
             self.close()
-            raise WebSocketError(e)
+            #raise WebSocketError(e)
 
     def flush(self):
         try:
