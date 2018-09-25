@@ -131,13 +131,19 @@ class WebsocketWSGIServer(object):
                         recvmsg = RedisMessage(websocket.receive())
                         if recvmsg:
                             if callable(private_settings.WS4REDIS_VALIDATE_FILTER):
-                                private_settings.WS4REDIS_VALIDATE_FILTER(recvmsg, websocket)
+                                try:
+                                    private_settings.WS4REDIS_VALIDATE_FILTER(recvmsg, websocket)
+                                except Exception:
+                                    pass
                             subscriber.publish_message(recvmsg)
                     elif fd == redis_fd:
                         sendmsg = RedisMessage(subscriber.parse_response())
                         valid = True
                         if callable(private_settings.WS4REDIS_WS_FILTER_BY_FILTER):
-                            valid = private_settings.WS4REDIS_WS_FILTER_BY_FILTER(websocket.filter, sendmsg)
+                            try:
+                                valid = private_settings.WS4REDIS_WS_FILTER_BY_FILTER(websocket.filter, sendmsg)
+                            except Exception:
+                                pass
                         if (sendmsg and (echo_message or sendmsg != recvmsg)) and valid:
                             websocket.send(sendmsg)
                     else:
