@@ -52,3 +52,15 @@ If set, this callback function is called instead of the default process_request 
 This function can be used to enforce custom authentication flow. i.e. JWT
 """
 WS4REDIS_PROCESS_REQUEST = getattr(settings, 'WS4REDIS_PROCESS_REQUEST', None)
+
+"""
+If set, this callback function is called each time a message is send to a websocket from the user. It checks if the message
+contains a filter which will then be set in the websocket.
+"""
+WS4REDIS_VALIDATE_FILTER = getattr(settings, 'WS4REDIS_VALIDATE_FILTER', None)
+
+"""
+If set, this callback function is called each time a message is about to be sent to the user via a websocket.
+Combined with the function above this function can be used to filter data before it is sent to the user.
+"""
+WS4REDIS_WS_FILTER_BY_FILTER = getattr(settings, 'WS4REDIS_WS_FILTER_BY_FILTER', None)

@@ -74,15 +74,15 @@ class RedisMessage(six.binary_type):
                 if settings.WS4REDIS_HEARTBEAT is None or value != settings.WS4REDIS_HEARTBEAT.encode():
                     return super(RedisMessage, cls).__new__(cls, value)
             elif isinstance(value, list):
-                if len(value) >= 2 and value[0] == b'message':
-                    return super(RedisMessage, cls).__new__(cls, value[2])
+                if len(value) >= 3 and value[0] == b'pmessage':
+                    return super(RedisMessage, cls).__new__(cls, value[3])
         else:
             if isinstance(value, (six.string_types, bytearray)):
                 if value != settings.WS4REDIS_HEARTBEAT:
                     return six.binary_type.__new__(cls, value)
             elif isinstance(value, list):
-                if len(value) >= 2 and value[0] == 'message':
-                    return six.binary_type.__new__(cls, value[2])
+                if len(value) >= 3 and value[0] == 'pmessage':
+                    return six.binary_type.__new__(cls, value[3])
         return None
 
 
@@ -117,17 +117,32 @@ class RedisStore(object):
     def get_prefix():
         return settings.WS4REDIS_PREFIX and '{0}:'.format(settings.WS4REDIS_PREFIX) or ''
 
-    def _get_message_channels(self, request=None, facility='{facility}', broadcast=False,
+    def _get_message_channels(self, request=None, facility='{facility}', broadcast=False, publish=True,
                               groups=(), users=(), sessions=()):
         prefix = self.get_prefix()
         channels = []
-        if broadcast is True:
-            # broadcast message to each subscriber listening on the named facility
-            channels.append('{prefix}broadcast:{facility}'.format(prefix=prefix, facility=facility))
+        if not publish:
+            if request is None:
+                channels.append('{facility}'.format(prefix=prefix, facility=facility))
+            else:
+                # import pdb; pdb.set_trace()
+                domains = request.environ.get('domain_paths', [])
+                sub_ptrn = ""
+                for domain in domains:
+                    sub_ptrn = sub_ptrn + '*:{facility}*:'.format(facility=domain)
+                channels.append('{facility}'.format(prefix=prefix, facility=sub_ptrn))
+        else:
+            if request is None:
+                channels.append('{facility}'.format(prefix=prefix, facility=facility))
+            else:
+                domains = request.environ.get('domain_paths', [])
+                for domain in domains:
+                    channels.append('{facility}'.format(prefix=prefix, facility=domain))
 
         # handle group messaging
         if isinstance(groups, (list, tuple)):
             # message is delivered to all listed groups
+
             channels.extend('{prefix}group:{0}:{facility}'.format(g, prefix=prefix, facility=facility)
                             for g in _wrap_groups(groups, request))
         elif groups is True and is_authenticated(request):

@@ -8,6 +8,7 @@ from ws4redis.wsgi_server import WebsocketWSGIServer
 class uWSGIWebsocket(object):
     def __init__(self):
         self._closed = False
+        self._filter = {}
 
     def get_file_descriptor(self):
         """Return the file descriptor for the given websocket"""
@@ -50,7 +51,7 @@ class uWSGIWebsocket(object):
 class uWSGIWebsocketServer(WebsocketWSGIServer):
     def upgrade_websocket(self, environ, start_response):
         uwsgi.websocket_handshake(environ['HTTP_SEC_WEBSOCKET_KEY'], environ.get('HTTP_ORIGIN', ''))
-        return uWSGIWebsocket()
+        return uWSGIWebsocket(environ)
 
     def select(self, rlist, wlist, xlist, timeout=None):
         return gevent.select.select(rlist, wlist, xlist, timeout)

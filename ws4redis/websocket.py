@@ -15,7 +15,7 @@ if six.PY3:
 
 
 class WebSocket(object):
-    __slots__ = ('_closed', 'stream', 'utf8validator', 'utf8validate_last')
+    __slots__ = ('_closed', 'stream', 'utf8validator', 'utf8validate_last', 'filter', 'domains')
 
     OPCODE_CONTINUATION = 0x00
     OPCODE_TEXT = 0x01
@@ -29,6 +29,7 @@ class WebSocket(object):
         self.stream = Stream(wsgi_input)
         self.utf8validator = Utf8Validator()
         self.utf8validate_last = None
+        self.filter = {}
 
     def __del__(self):
         try:
@@ -214,7 +215,8 @@ class WebSocket(object):
         if self._closed:
             raise WebSocketError("Connection is already closed")
         try:
-            return self.read_message()
+            payload = self.read_message()
+            return payload
         except UnicodeError as e:
             logger.info('websocket.receive: UnicodeError {}'.format(e))
             self.close(1007)

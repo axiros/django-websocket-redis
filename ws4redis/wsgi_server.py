@@ -130,10 +130,15 @@ class WebsocketWSGIServer(object):
                     if fd == websocket_fd:
                         recvmsg = RedisMessage(websocket.receive())
                         if recvmsg:
+                            if callable(private_settings.WS4REDIS_VALIDATE_FILTER):
+                                private_settings.WS4REDIS_VALIDATE_FILTER(recvmsg, websocket)
                             subscriber.publish_message(recvmsg)
                     elif fd == redis_fd:
                         sendmsg = RedisMessage(subscriber.parse_response())
-                        if sendmsg and (echo_message or sendmsg != recvmsg):
+                        valid = True
+                        if callable(private_settings.WS4REDIS_WS_FILTER_BY_FILTER):
+                            valid = private_settings.WS4REDIS_WS_FILTER_BY_FILTER(websocket.filter, sendmsg)
+                        if (sendmsg and (echo_message or sendmsg != recvmsg)) and valid:
                             websocket.send(sendmsg)
                     else:
                         logger.error('Invalid file descriptor: {0}'.format(fd))

@@ -11,21 +11,21 @@ class RedisSubscriber(RedisStore):
     publish_channels = ['publish-session', 'publish-group', 'publish-user', 'publish-broadcast']
 
     def __init__(self, connection):
-        self._subscription = None
+        self._subscriptions = None
         super(RedisSubscriber, self).__init__(connection)
 
     def parse_response(self):
         """
         Parse a message response sent by the Redis datastore on a subscribed channel.
         """
-        return self._subscription.parse_response()
+        message = self._subscription.parse_response()
+        return message
 
     def set_pubsub_channels(self, request, channels):
         """
         Initialize the channels used for publishing and subscribing messages through the message queue.
         """
         facility = request.path_info.replace(settings.WEBSOCKET_URL, '', 1)
-
         # initialize publishers
         audience = {
             'users': 'publish-user' in channels and [SELF] or [],
@@ -34,8 +34,9 @@ class RedisSubscriber(RedisStore):
             'broadcast': 'publish-broadcast' in channels,
         }
         self._publishers = set()
-        for key in self._get_message_channels(request=request, facility=facility, **audience):
+        for key in self._get_message_channels(request=request, facility=facility, publish=True, **audience):
             self._publishers.add(key)
+
 
         # initialize subscribers
         audience = {
@@ -46,7 +47,7 @@ class RedisSubscriber(RedisStore):
         }
         self._subscription = self._connection.pubsub()
         for key in self._get_message_channels(request=request, facility=facility, **audience):
-            self._subscription.subscribe(key)
+            self._subscription.psubscribe(key)
 
     def send_persisted_messages(self, websocket):
         """

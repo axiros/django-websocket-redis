@@ -34,22 +34,9 @@ class RedisPublisher(RedisStore):
         ``group``, ``user``, ``session`` or ``any``. The default is ``any``, which means to check
         for all possible audiences.
         """
+        # handle group messaging
         prefix = self.get_prefix()
         channels = []
-        if audience in ('session', 'any',):
-            if request and request.session:
-                channels.append('{prefix}session:{0}:{facility}'.format(request.session.session_key, prefix=prefix, facility=facility))
-        if audience in ('user', 'any',):
-            if is_authenticated(request):
-                channels.append('{prefix}user:{0}:{facility}'.format(request.user.get_username(), prefix=prefix, facility=facility))
-        if audience in ('group', 'any',):
-            try:
-                if is_authenticated(request):
-                    groups = request.session['ws4redis:memberof']
-                    channels.extend('{prefix}group:{0}:{facility}'.format(g, prefix=prefix, facility=facility)
-                                for g in groups)
-            except (KeyError, AttributeError):
-                pass
         if audience in ('broadcast', 'any',):
             channels.append('{prefix}broadcast:{facility}'.format(prefix=prefix, facility=facility))
         for channel in channels:

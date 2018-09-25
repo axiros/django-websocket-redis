@@ -62,6 +62,7 @@ class WebsocketRunServer(WebsocketWSGIServer):
         """
         Attempt to upgrade the socket environ['wsgi.input'] into a websocket enabled connection.
         """
+
         websocket_version = environ.get('HTTP_SEC_WEBSOCKET_VERSION', '')
         if not websocket_version:
             raise UpgradeRequiredError
