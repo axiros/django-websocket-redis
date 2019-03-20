@@ -130,7 +130,6 @@ class WebsocketWSGIServer(object):
                     if fd == websocket_fd:
                         recvmsg = RedisMessage(websocket.receive())
                         if recvmsg:
-                            logger.error(recvmsg)
                             if recvmsg == private_settings.WS4REDIS_HEARTBEAT_REQUEST_STRING.encode():
                                 if private_settings.WS4REDIS_HEARTBEAT and not websocket.closed:
                                     websocket.send(private_settings.WS4REDIS_HEARTBEAT)
