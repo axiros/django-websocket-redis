@@ -127,13 +127,13 @@ class WebsocketWSGIServer(object):
                     # flush empty socket
                     websocket.flush()
                 for fd in ready:
-                    heartbeat = False
                     if fd == websocket_fd:
                         recvmsg = RedisMessage(websocket.receive())
                         if recvmsg:
                             logger.error(recvmsg)
                             if recvmsg == private_settings.WS4REDIS_HEARTBEAT_REQUEST_STRING.encode():
-                                heartbeat = True
+                                if private_settings.WS4REDIS_HEARTBEAT and not websocket.closed:
+                                    websocket.send(private_settings.WS4REDIS_HEARTBEAT)
                             if callable(private_settings.WS4REDIS_VALIDATE_FILTER):
                                 try:
                                     private_settings.WS4REDIS_VALIDATE_FILTER(recvmsg, websocket)
@@ -154,11 +154,6 @@ class WebsocketWSGIServer(object):
 
                     else:
                         logger.error('Invalid file descriptor: {0}'.format(fd))
-                # Check again that the websocket is closed before sending the heartbeat,
-                # because the websocket can closed previously in the loop.
-                # new flag for heartbeat to make sure that it is not triggered by anything but by the heartbeatrequest string
-                if private_settings.WS4REDIS_HEARTBEAT and not websocket.closed and heartbeat:
-                    websocket.send(private_settings.WS4REDIS_HEARTBEAT)
                 # Remove websocket from _websockets if closed
                 if websocket.closed:
                     self._websockets.remove(websocket)
