@@ -28,9 +28,6 @@ WS4REDIS_SUBSCRIBER = getattr(settings, 'WS4REDIS_SUBSCRIBER', 'ws4redis.subscri
 """
 This set the magic string to recognize heartbeat messages. If set, this message string is ignored
 by the server and also shall be ignored on the client.
-
-If WS4REDIS_HEARTBEAT is not None, the server sends at least every 4 seconds a heartbeat message.
-It is then up to the client to decide, what to do with these messages.
 """
 WS4REDIS_HEARTBEAT = getattr(settings, 'WS4REDIS_HEARTBEAT', None)
 
@@ -64,3 +61,8 @@ If set, this callback function is called each time a message is about to be sent
 Combined with the function above this function can be used to filter data before it is sent to the user.
 """
 WS4REDIS_WS_FILTER_BY_FILTER = getattr(settings, 'WS4REDIS_WS_FILTER_BY_FILTER', None)
+
+"""
+Heartbeat Request string to make sure that a heartbeat message only pops up when requested by the client.
+"""
+WS4REDIS_HEARTBEAT_REQUEST_STRING = getattr(settings, 'WS4REDIS_HEARTBEAT_REQUEST_STRING', "HEARTBEAT_REQUEST")
